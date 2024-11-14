@@ -75,7 +75,16 @@ func main() {
 		addTask(argsWithoutFile[1:])
 	case "delete":
 		deleteTask(argsWithoutFile[1:])
-	case ""
+	case "mark-done":
+		markDoneTask(argsWithoutFile[1:])
+	case "update":
+		updateTask(argsWithoutFile[1:])
+	case "mark-in-progress":
+		markInProgTask(argsWithoutFile[1:])
+	case "list":
+		listTasks(argsWithoutFile[1:])
+	default:
+		fmt.Println("Invalid command")
 	}
 
 }
@@ -102,7 +111,24 @@ func addTask(newTask []string) {
 
 }
 
-// func updateTask()     {}
+func updateTask(inputs []string) {
+	taskIndex, err := strconv.Atoi(inputs[0])
+	if err != nil || len(inputs) < 2 {
+		fmt.Println("Error: invalid type of index passed or no description passed")
+		os.Exit(1)
+	}
+	newTaskDescription := inputs[1]
+
+	for index, r := range TaskDB {
+		if r.TaskID == taskIndex {
+			e := &TaskDB[index]
+			e.TaskDesc = newTaskDescription
+		}
+	}
+
+	truncateAndWrite(&TaskDB)
+
+}
 func deleteTask(inputs []string) {
 
 	taskIndex, err := strconv.Atoi(inputs[0])
@@ -149,14 +175,47 @@ func markDoneTask(inputs []string) {
 		os.Exit(1)
 	}
 
-	for i, r := range TaskDB {
+	for index, r := range TaskDB {
 		if r.TaskID == taskIndex {
-			r.TaskStatus = "done"
+			e := &TaskDB[index]
+			e.TaskStatus = "done"
 		}
 	}
 
 	truncateAndWrite(&TaskDB)
 }
 
-// func markInProgTask() {}
-// func listTasks()      {}
+func markInProgTask(inputs []string) {
+	taskIndex, err := strconv.Atoi(inputs[0])
+	if err != nil {
+		fmt.Println("Error: invalid type of index passed")
+		os.Exit(1)
+	}
+
+	for index, r := range TaskDB {
+		if r.TaskID == taskIndex {
+			e := &TaskDB[index]
+			e.TaskStatus = "in-progress"
+		}
+	}
+
+	truncateAndWrite(&TaskDB)
+}
+
+func listTasks(inputs []string) {
+	fmt.Println("Task ID    Task Description    Task Status")
+	if len(inputs) == 0 {
+		for _, r := range TaskDB {
+			fmt.Printf("%d \t%s \t%s\n", r.TaskID, r.TaskDesc, r.TaskStatus)
+		}
+		return
+	}
+	listType := inputs[0]
+
+	for _, r := range TaskDB {
+		if r.TaskStatus == listType {
+			fmt.Printf("%d \t%s \t%s\n", r.TaskID, r.TaskDesc, r.TaskStatus)
+		}
+	}
+
+}
